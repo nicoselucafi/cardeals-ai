@@ -1,0 +1,46 @@
+# Environment files (contain secrets!)
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Node.js
+node_modules/
+.next/
+out/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Debug/analysis files (scraper)
+scraper/sample_*.html
+scraper/octane_*.html
+scraper/*_raw.html
+scraper/*_offers.json
+scraper/*.txt
+
+# Claude workspace
+.claude/
