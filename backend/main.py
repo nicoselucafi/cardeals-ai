@@ -98,16 +98,17 @@ async def api_key_middleware(request: Request, call_next):
     return await call_next(request)
 
 
-# CORS - restrict to configured origins
+# CORS - restrict to configured origins + Vercel preview URLs
 cors_origins = settings.cors_origins_list
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
+    allow_origin_regex=r"https://cardeals-.*\.vercel\.app",
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization", "X-API-Key"],
 )
-logger.info(f"CORS: Allowing origins {cors_origins}")
+logger.info(f"CORS: Allowing origins {cors_origins} + Vercel preview URLs")
 
 # Include routers
 app.include_router(health.router)
