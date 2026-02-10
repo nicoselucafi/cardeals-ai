@@ -48,7 +48,7 @@ function LoginContent() {
           <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30 flex items-center gap-3">
             <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
             <p className="text-red-400 text-sm">
-              {error || "Authentication failed. Please try again."}
+              {error || authError || "Authentication failed. Please try again."}
             </p>
           </div>
         )}
