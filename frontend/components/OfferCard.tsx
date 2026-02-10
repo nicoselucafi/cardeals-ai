@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, MouseEvent as ReactMouseEvent } from "react";
 import Image from "next/image";
 import { Offer } from "@/lib/types";
 import { formatCurrency, getConfidencePercent, getRelativeTime } from "@/lib/utils";
 import { getCarImageConfig, getVehicleType } from "@/lib/carImages";
-import { ExternalLink, Car, Truck, Zap } from "lucide-react";
-import Link from "next/link";
+import { Car, Truck, Zap } from "lucide-react";
 
 interface OfferCardProps {
   offer: Offer;
@@ -25,6 +24,9 @@ function VehicleIcon({ type, className }: { type: string; className?: string }) 
 
 export default function OfferCard({ offer }: OfferCardProps) {
   const [imageError, setImageError] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+  const cardRef = useRef<HTMLAnchorElement>(null);
   const confidencePercent = getConfidencePercent(offer.confidence_score);
   const imageConfig = getCarImageConfig(offer.make, offer.model);
   const vehicleType = getVehicleType(offer.model);
@@ -36,8 +38,41 @@ export default function OfferCard({ offer }: OfferCardProps) {
     return "text-orange-400";
   };
 
+  const handleMouseMove = (e: ReactMouseEvent) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  };
+
+  const href = offer.source_url || `/offer/${offer.id}`;
+  const isExternal = !!offer.source_url;
+
   return (
-    <div className="bg-background-card border border-border rounded-xl overflow-hidden hover:border-accent/50 transition-all duration-300 group hover:shadow-glow-sm">
+    <a
+      ref={cardRef}
+      href={href}
+      target={isExternal ? "_blank" : undefined}
+      rel={isExternal ? "noopener noreferrer" : undefined}
+      aria-label={`${offer.year} ${offer.make} ${offer.model} ${offer.offer_type} deal at ${offer.dealer_name}`}
+      className="block cursor-pointer bg-background-card border border-border rounded-xl overflow-hidden hover:border-accent/50 transition-all duration-300 group relative z-10"
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        boxShadow: isHovered
+          ? `0 0 20px rgba(0, 212, 255, 0.3), inset 0 0 20px rgba(0, 212, 255, 0.05)`
+          : undefined,
+      }}
+    >
+      {/* Cursor-tracking glow overlay */}
+      {isHovered && (
+        <div
+          className="absolute inset-0 rounded-xl pointer-events-none z-20"
+          style={{
+            background: `radial-gradient(300px circle at ${mousePos.x}px ${mousePos.y}px, rgba(0, 212, 255, 0.12), transparent 60%)`,
+          }}
+        />
+      )}
       {/* Car Image - Real image or Model-specific gradient fallback */}
       <div className={`relative h-44 ${!hasRealImage ? `bg-gradient-to-br ${imageConfig.gradient.from} ${imageConfig.gradient.to}` : 'bg-background-secondary'} flex flex-col items-center justify-center border-b border-border overflow-hidden`}>
         {hasRealImage ? (
@@ -150,7 +185,7 @@ export default function OfferCard({ offer }: OfferCardProps) {
         )}
 
         {/* AI Score */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between">
           <span className="text-xs text-gray-500">
             AI Deal Score: <span className={getConfidenceColor(confidencePercent)}>{confidencePercent}%</span>
           </span>
@@ -158,27 +193,7 @@ export default function OfferCard({ offer }: OfferCardProps) {
             {getRelativeTime(offer.updated_at)}
           </span>
         </div>
-
-        {/* Action Button */}
-        {offer.source_url ? (
-          <a
-            href={offer.source_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-accent text-accent hover:bg-accent hover:text-background transition-all duration-200 font-medium text-sm"
-          >
-            View Details
-            <ExternalLink className="w-4 h-4" />
-          </a>
-        ) : (
-          <Link
-            href={`/offer/${offer.id}`}
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-accent text-accent hover:bg-accent hover:text-background transition-all duration-200 font-medium text-sm"
-          >
-            View Details
-          </Link>
-        )}
       </div>
-    </div>
+    </a>
   );
 }

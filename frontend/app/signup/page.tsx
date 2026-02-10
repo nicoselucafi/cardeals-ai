@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { Mail, Lock, AlertCircle, Loader2, CheckCircle } from "lucide-react";
+import { Mail, Lock, AlertCircle, Loader2, CheckCircle, User } from "lucide-react";
 
 export default function SignupPage() {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -34,7 +35,7 @@ export default function SignupPage() {
 
     setLoading(true);
 
-    const { error, confirmed } = await signUp(email, password);
+    const { error, confirmed } = await signUp(email, password, fullName || undefined);
 
     if (error) {
       setError(error.message);
@@ -93,6 +94,23 @@ export default function SignupPage() {
 
         {/* Signup form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="fullName" className="block text-sm font-medium text-gray-300 mb-1.5">
+              Full name
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <input
+                id="fullName"
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Your name"
+                className="w-full pl-10 pr-4 py-3 bg-background-secondary border border-border rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+              />
+            </div>
+          </div>
+
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1.5">
               Email

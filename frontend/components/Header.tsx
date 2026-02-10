@@ -47,14 +47,6 @@ export default function Header() {
               Home
             </Link>
             <Link
-              href="/chat"
-              className={`transition-colors font-medium ${
-                isActive("/chat") ? "text-accent" : "text-gray-400 hover:text-accent"
-              }`}
-            >
-              AI Chat
-            </Link>
-            <Link
               href="/deals"
               className={`transition-colors font-medium ${
                 isActive("/deals") ? "text-accent" : "text-gray-400 hover:text-accent"
@@ -74,7 +66,7 @@ export default function Header() {
                       <User className="w-4 h-4 text-accent" />
                     </div>
                     <span className="text-sm text-gray-400 max-w-[120px] truncate">
-                      {user.email}
+                      {user.user_metadata?.full_name || user.email}
                     </span>
                   </div>
                   <span className="px-2 py-1 text-xs font-medium rounded-full bg-accent/10 text-accent border border-accent/30">

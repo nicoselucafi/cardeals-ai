@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import CursorGlow from "@/components/CursorGlow";
+import FloatingChat from "@/components/FloatingChat";
 import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -32,6 +33,7 @@ export default function RootLayout({
           <main className="min-h-screen pt-16">
             {children}
           </main>
+          <FloatingChat />
         </AuthProvider>
       </body>
     </html>

@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import ChatInput from "@/components/ChatInput";
 import { useAuth } from "@/context/AuthContext";
 import { Offer } from "@/lib/types";
+import ChatInput from "@/components/ChatInput";
 import OfferCard from "@/components/OfferCard";
 import OfferCardSkeleton from "@/components/OfferCardSkeleton";
-import { Sparkles, Search, Link as LinkIcon, Bot, ArrowRight, TrendingUp, Car } from "lucide-react";
+import { Sparkles, Search, Link as LinkIcon, Bot, ArrowRight, TrendingUp } from "lucide-react";
 
 const exampleQueries = [
   "Cheapest Toyota lease",
@@ -19,7 +18,6 @@ const exampleQueries = [
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
   const [featuredOffers, setFeaturedOffers] = useState<Offer[]>([]);
   const [loadingOffers, setLoadingOffers] = useState(true);
 
@@ -47,11 +45,6 @@ export default function Home() {
     }
   };
 
-  const handleSearch = (query: string) => {
-    // Redirect to chat page with query
-    router.push(`/chat?q=${encodeURIComponent(query)}`);
-  };
-
   // Logged-in user dashboard
   if (!authLoading && user) {
     return (
@@ -60,7 +53,7 @@ export default function Home() {
           {/* Welcome Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">
-              Welcome back{user.email ? `, ${user.email.split("@")[0]}` : ""}
+              Welcome back{user.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : user.email ? `, ${user.email.split("@")[0]}` : ""}
             </h1>
             <p className="text-gray-400">Find your next great car deal</p>
           </div>
@@ -77,59 +70,24 @@ export default function Home() {
               </div>
             </div>
             <ChatInput
-              onSubmit={handleSearch}
+              onSubmit={(query) => {
+                window.dispatchEvent(new CustomEvent("open-floating-chat", { detail: { query } }));
+              }}
               placeholder="Try: 'Best RAV4 lease under $350/month'"
             />
             <div className="flex flex-wrap gap-2 mt-4">
               {exampleQueries.map((query) => (
                 <button
                   key={query}
-                  onClick={() => handleSearch(query)}
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent("open-floating-chat", { detail: { query } }));
+                  }}
                   className="px-3 py-1.5 rounded-full border border-border text-xs text-gray-400 hover:text-accent hover:border-accent/50 transition-all"
                 >
                   {query}
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="grid md:grid-cols-2 gap-4 mb-8">
-            <Link
-              href="/chat"
-              className="bg-background-card border border-border rounded-xl p-6 hover:border-accent/50 transition-colors group"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center border border-accent/30 group-hover:border-accent transition-colors">
-                    <Bot className="w-6 h-6 text-accent" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white">AI Chat</h3>
-                    <p className="text-sm text-gray-400">Search with natural language</p>
-                  </div>
-                </div>
-                <ArrowRight className="w-5 h-5 text-gray-500 group-hover:text-accent transition-colors" />
-              </div>
-            </Link>
-
-            <Link
-              href="/deals"
-              className="bg-background-card border border-border rounded-xl p-6 hover:border-accent/50 transition-colors group"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center border border-accent/30 group-hover:border-accent transition-colors">
-                    <Car className="w-6 h-6 text-accent" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white">Browse Deals</h3>
-                    <p className="text-sm text-gray-400">Filter and sort all offers</p>
-                  </div>
-                </div>
-                <ArrowRight className="w-5 h-5 text-gray-500 group-hover:text-accent transition-colors" />
-              </div>
-            </Link>
           </div>
 
           {/* Featured Deals */}
