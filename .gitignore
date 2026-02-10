@@ -41,6 +41,7 @@ scraper/octane_*.html
 scraper/*_raw.html
 scraper/*_offers.json
 scraper/*.txt
+!scraper/requirements.txt
 
 # Claude workspace
 .claude/
