@@ -34,12 +34,17 @@ export default function SignupPage() {
 
     setLoading(true);
 
-    const { error } = await signUp(email, password);
+    const { error, confirmed } = await signUp(email, password);
 
     if (error) {
       setError(error.message);
       setLoading(false);
+    } else if (confirmed) {
+      // No email verification required — redirect immediately
+      router.push("/");
+      router.refresh();
     } else {
+      // Email verification required — show check-your-email message
       setSuccess(true);
       setLoading(false);
     }

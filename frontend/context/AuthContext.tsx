@@ -9,7 +9,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: Error | null; confirmed: boolean }>;
   signOut: () => Promise<void>;
 }
 
@@ -50,14 +50,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-    return { error: error as Error | null };
+    // If session exists, user was auto-confirmed (no email verification)
+    const confirmed = !!data?.session;
+    return { error: error as Error | null, confirmed };
   };
 
   const signOut = async () => {
