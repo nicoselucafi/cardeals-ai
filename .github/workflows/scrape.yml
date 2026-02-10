@@ -1,0 +1,35 @@
+name: Daily Scraper
+
+on:
+  schedule:
+    # Run daily at 8 AM UTC (midnight PST / 1 AM PDT)
+    - cron: "0 8 * * *"
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: scraper/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          pip install -r scraper/requirements.txt
+          playwright install chromium --with-deps
+
+      - name: Run scraper
+        working-directory: scraper
+        env:
+          DATABASE_URL: ${{ secrets.SCRAPER_DATABASE_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python run_daily.py
