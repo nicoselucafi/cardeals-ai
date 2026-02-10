@@ -74,6 +74,10 @@ async def api_key_middleware(request: Request, call_next):
     if request.url.path in public_paths:
         return await call_next(request)
 
+    # Public API paths (offers browsing is open to all)
+    if request.url.path.startswith("/api/offers"):
+        return await call_next(request)
+
     # CORS preflight requests don't carry auth headers
     if request.method == "OPTIONS":
         return await call_next(request)
