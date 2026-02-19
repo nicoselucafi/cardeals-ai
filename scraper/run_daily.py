@@ -10,7 +10,7 @@ import asyncio
 import logging
 from datetime import datetime
 
-from scrape_and_save import main as run_scrape
+from main import main as run_scrape
 from validate_urls import full_validation
 
 logging.basicConfig(
