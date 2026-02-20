@@ -1,5 +1,6 @@
 "use client";
 
+import ReactMarkdown from "react-markdown";
 import { Offer } from "@/lib/types";
 import OfferCard from "./OfferCard";
 import OfferCardSkeleton from "./OfferCardSkeleton";
@@ -40,7 +41,9 @@ export default function ChatMessages({ messages, isLoading }: ChatMessagesProps)
                   : "bg-background-secondary border border-border"
               }`}
             >
-              <p className="whitespace-pre-wrap">{message.content}</p>
+              <div className="prose prose-invert prose-sm max-w-none [&>p]:my-1 [&>ul]:my-1 [&>ol]:my-1">
+                <ReactMarkdown>{message.content}</ReactMarkdown>
+              </div>
             </div>
 
             {message.role === "user" && (

@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import OfferCard from "@/components/OfferCard";
 import OfferCardSkeleton from "@/components/OfferCardSkeleton";
+import ComparePanel from "@/components/ComparePanel";
 import { Offer } from "@/lib/types";
-import { Filter, SlidersHorizontal, Lock } from "lucide-react";
+import { Lock, GitCompareArrows, X } from "lucide-react";
+
+const MAX_COMPARE = 3;
 
 const MAKES = ["All Makes", "Toyota", "Honda", "Tesla"];
 const MODELS: Record<string, string[]> = {
@@ -33,7 +36,53 @@ export default function DealsPage() {
   const [selectedModel, setSelectedModel] = useState("All Models");
   const [selectedType, setSelectedType] = useState("All Types");
   const [sortBy, setSortBy] = useState("monthly_payment");
-  const [showFilters, setShowFilters] = useState(false);
+
+  // Comparison
+  const [compareOffers, setCompareOffers] = useState<Offer[]>([]);
+  const [showComparePanel, setShowComparePanel] = useState(false);
+  const comparePanelRef = useRef<HTMLDivElement>(null);
+
+  const selectedIds = new Set(compareOffers.map((o) => o.id));
+
+  const handleCompareToggle = (offer: Offer) => {
+    setCompareOffers((prev) => {
+      if (prev.some((o) => o.id === offer.id)) {
+        return prev.filter((o) => o.id !== offer.id);
+      }
+      if (prev.length >= MAX_COMPARE) return prev;
+      return [...prev, offer];
+    });
+  };
+
+  const handleRemoveOffer = (id: string) => {
+    setCompareOffers((prev) => prev.filter((o) => o.id !== id));
+  };
+
+  const handleCloseCompare = () => {
+    setShowComparePanel(false);
+    setCompareOffers([]);
+  };
+
+  const handleOpenCompare = () => {
+    setShowComparePanel(true);
+  };
+
+  // Auto-scroll to compare panel when it opens
+  useEffect(() => {
+    if (showComparePanel) {
+      // Small delay to let the panel render, then scroll to top
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: "instant" });
+      });
+    }
+  }, [showComparePanel]);
+
+  // Close panel if fewer than 2 offers remain
+  useEffect(() => {
+    if (showComparePanel && compareOffers.length < 2) {
+      setShowComparePanel(false);
+    }
+  }, [compareOffers.length, showComparePanel]);
 
   // Reset model when make changes
   useEffect(() => {
@@ -110,140 +159,206 @@ export default function DealsPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Current Deals</h1>
-          <p className="text-gray-400">
-            Browse all active lease and finance offers from dealers in LA
-          </p>
+    <div className="min-h-screen">
+      {/* Compare Panel — slides down from top */}
+      {showComparePanel && compareOffers.length >= 2 && (
+        <div ref={comparePanelRef}>
+          <ComparePanel
+            selectedOffers={compareOffers}
+            onClose={handleCloseCompare}
+            onRemoveOffer={handleRemoveOffer}
+          />
         </div>
+      )}
 
-        {/* Filters Bar */}
-        <div className="bg-background-card border border-border rounded-xl p-4 mb-6">
-          <div className="flex flex-wrap items-center gap-4">
-            {/* Make Filter */}
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-400">Make:</label>
-              <select
-                value={selectedMake}
-                onChange={(e) => setSelectedMake(e.target.value)}
-                className="bg-background-secondary border border-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent"
-              >
-                {MAKES.map((make) => (
-                  <option key={make} value={make}>
-                    {make}
-                  </option>
-                ))}
-              </select>
-            </div>
+      <div className="px-4 py-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">Current Deals</h1>
+            <p className="text-gray-400">
+              Browse all active lease and finance offers from dealers in LA.
+              {" "}Select up to {MAX_COMPARE} deals to compare.
+            </p>
+          </div>
 
-            {/* Model Filter */}
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-400">Model:</label>
-              <select
-                value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
-                className="bg-background-secondary border border-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent"
-              >
-                {(MODELS[selectedMake] || MODELS["All Makes"]).map((model) => (
-                  <option key={model} value={model}>
-                    {model}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Filters Bar */}
+          <div className="bg-background-card border border-border rounded-xl p-4 mb-6">
+            <div className="flex flex-wrap items-center gap-4">
+              {/* Make Filter */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-400">Make:</label>
+                <select
+                  value={selectedMake}
+                  onChange={(e) => setSelectedMake(e.target.value)}
+                  className="bg-background-secondary border border-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent"
+                >
+                  {MAKES.map((make) => (
+                    <option key={make} value={make}>
+                      {make}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            {/* Type Filter */}
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-400">Type:</label>
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="bg-background-secondary border border-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent"
-              >
-                {OFFER_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type === "All Types" ? type : type.charAt(0).toUpperCase() + type.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
+              {/* Model Filter */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-400">Model:</label>
+                <select
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  className="bg-background-secondary border border-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent"
+                >
+                  {(MODELS[selectedMake] || MODELS["All Makes"]).map((model) => (
+                    <option key={model} value={model}>
+                      {model}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            {/* Sort */}
-            <div className="flex items-center gap-2 ml-auto">
-              <label className="text-sm text-gray-400">Sort:</label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-background-secondary border border-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent"
-              >
-                {SORT_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+              {/* Type Filter */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-400">Type:</label>
+                <select
+                  value={selectedType}
+                  onChange={(e) => setSelectedType(e.target.value)}
+                  className="bg-background-secondary border border-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent"
+                >
+                  {OFFER_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type === "All Types" ? type : type.charAt(0).toUpperCase() + type.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Sort */}
+              <div className="flex items-center gap-2 ml-auto">
+                <label className="text-sm text-gray-400">Sort:</label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="bg-background-secondary border border-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent"
+                >
+                  {SORT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
+
+          {/* Results count */}
+          {!loading && !error && (
+            <p className="text-sm text-gray-500 mb-4">
+              Showing {offers.length} deal{offers.length !== 1 ? "s" : ""}
+            </p>
+          )}
+
+          {/* Error state */}
+          {error && (
+            <div className="text-center py-12">
+              <p className="text-red-400 mb-4">{error}</p>
+              <button
+                onClick={fetchOffers}
+                className="px-4 py-2 bg-accent text-background rounded-lg font-medium"
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+
+          {/* Loading state */}
+          {loading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <OfferCardSkeleton key={i} />
+              ))}
+            </div>
+          )}
+
+          {/* Offers grid */}
+          {!loading && !error && offers.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {offers.map((offer) => (
+                <OfferCard
+                  key={offer.id}
+                  offer={offer}
+                  showCompare
+                  isSelected={selectedIds.has(offer.id)}
+                  onCompareToggle={handleCompareToggle}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!loading && !error && offers.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-400 mb-2">No deals found matching your filters.</p>
+              <button
+                onClick={() => {
+                  setSelectedMake("All Makes");
+                  setSelectedModel("All Models");
+                  setSelectedType("All Types");
+                }}
+                className="text-accent hover:underline"
+              >
+                Clear filters
+              </button>
+            </div>
+          )}
         </div>
-
-        {/* Results count */}
-        {!loading && !error && (
-          <p className="text-sm text-gray-500 mb-4">
-            Showing {offers.length} deal{offers.length !== 1 ? "s" : ""}
-          </p>
-        )}
-
-        {/* Error state */}
-        {error && (
-          <div className="text-center py-12">
-            <p className="text-red-400 mb-4">{error}</p>
-            <button
-              onClick={fetchOffers}
-              className="px-4 py-2 bg-accent text-background rounded-lg font-medium"
-            >
-              Try Again
-            </button>
-          </div>
-        )}
-
-        {/* Loading state */}
-        {loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <OfferCardSkeleton key={i} />
-            ))}
-          </div>
-        )}
-
-        {/* Offers grid */}
-        {!loading && !error && offers.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {offers.map((offer) => (
-              <OfferCard key={offer.id} offer={offer} />
-            ))}
-          </div>
-        )}
-
-        {/* Empty state */}
-        {!loading && !error && offers.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-400 mb-2">No deals found matching your filters.</p>
-            <button
-              onClick={() => {
-                setSelectedMake("All Makes");
-                setSelectedModel("All Models");
-                setSelectedType("All Types");
-              }}
-              className="text-accent hover:underline"
-            >
-              Clear filters
-            </button>
-          </div>
-        )}
       </div>
+
+      {/* Sticky bottom bar when offers selected */}
+      {compareOffers.length > 0 && !showComparePanel && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background-card/95 backdrop-blur-md border-t border-border px-4 py-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-400">
+                {compareOffers.length} of {MAX_COMPARE} selected
+              </span>
+              <div className="flex gap-2">
+                {compareOffers.map((o) => (
+                  <span
+                    key={o.id}
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-accent/10 border border-accent/30 text-xs text-accent"
+                  >
+                    {o.model}
+                    <button
+                      onClick={() => handleRemoveOffer(o.id)}
+                      className="hover:text-white transition-colors"
+                      aria-label={`Remove ${o.model}`}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCompareOffers([])}
+                className="px-3 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+              >
+                Clear
+              </button>
+              <button
+                onClick={handleOpenCompare}
+                disabled={compareOffers.length < 2}
+                className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-dim text-background font-medium text-sm rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <GitCompareArrows className="w-4 h-4" />
+                Compare {compareOffers.length >= 2 ? `(${compareOffers.length})` : ""}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

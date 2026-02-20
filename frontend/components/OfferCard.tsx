@@ -9,6 +9,9 @@ import { Car, Truck, Zap } from "lucide-react";
 
 interface OfferCardProps {
   offer: Offer;
+  showCompare?: boolean;
+  isSelected?: boolean;
+  onCompareToggle?: (offer: Offer) => void;
 }
 
 function VehicleIcon({ type, className }: { type: string; className?: string }) {
@@ -22,7 +25,7 @@ function VehicleIcon({ type, className }: { type: string; className?: string }) 
   }
 }
 
-export default function OfferCard({ offer }: OfferCardProps) {
+export default function OfferCard({ offer, showCompare, isSelected, onCompareToggle }: OfferCardProps) {
   const [imageError, setImageError] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
@@ -54,7 +57,9 @@ export default function OfferCard({ offer }: OfferCardProps) {
       target={isExternal ? "_blank" : undefined}
       rel={isExternal ? "noopener noreferrer" : undefined}
       aria-label={`${offer.year} ${offer.make} ${offer.model} ${offer.offer_type} deal at ${offer.dealer_name}`}
-      className="block cursor-pointer bg-background-card border border-border rounded-xl overflow-hidden hover:border-accent/50 transition-all duration-300 group relative z-10"
+      className={`block cursor-pointer bg-background-card border rounded-xl overflow-hidden hover:border-accent/50 transition-all duration-300 group relative z-10 ${
+        isSelected ? "border-accent ring-1 ring-accent/30" : "border-border"
+      }`}
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -77,7 +82,6 @@ export default function OfferCard({ offer }: OfferCardProps) {
       <div className={`relative h-44 ${!hasRealImage ? `bg-gradient-to-br ${imageConfig.gradient.from} ${imageConfig.gradient.to}` : 'bg-background-secondary'} flex flex-col items-center justify-center border-b border-border overflow-hidden`}>
         {hasRealImage ? (
           <>
-            {/* Real vehicle image */}
             <Image
               src={offer.image_url!}
               alt={`${offer.year} ${offer.make} ${offer.model}`}
@@ -86,26 +90,20 @@ export default function OfferCard({ offer }: OfferCardProps) {
               onError={() => setImageError(true)}
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
-            {/* Gradient overlay for text readability */}
             <div className="absolute inset-0 bg-gradient-to-t from-background-card/90 via-transparent to-background-card/30" />
           </>
         ) : (
           <>
-            {/* Fallback: Decorative background pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute inset-0" style={{
                 backgroundImage: `radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)`,
                 backgroundSize: '24px 24px',
               }} />
             </div>
-
-            {/* Large vehicle icon */}
             <VehicleIcon
               type={vehicleType}
               className={`w-16 h-16 ${imageConfig.gradient.accent} opacity-40 mb-2`}
             />
-
-            {/* Model name prominently displayed */}
             <div className="text-center z-10 px-4">
               <p className={`text-2xl font-bold ${imageConfig.gradient.accent} drop-shadow-lg`}>
                 {offer.model}
@@ -114,8 +112,6 @@ export default function OfferCard({ offer }: OfferCardProps) {
                 {offer.year} {offer.make}
               </p>
             </div>
-
-            {/* Bottom gradient fade */}
             <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-background-card to-transparent" />
           </>
         )}
@@ -184,14 +180,33 @@ export default function OfferCard({ offer }: OfferCardProps) {
           </div>
         )}
 
-        {/* AI Score */}
+        {/* AI Score + Compare button row */}
         <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-500">
-            AI Deal Score: <span className={getConfidenceColor(confidencePercent)}>{confidencePercent}%</span>
-          </span>
-          <span className="text-xs text-gray-600">
-            {getRelativeTime(offer.updated_at)}
-          </span>
+          <div>
+            <span className="text-xs text-gray-500">
+              AI Deal Score: <span className={getConfidenceColor(confidencePercent)}>{confidencePercent}%</span>
+            </span>
+            <span className="text-xs text-gray-600 ml-3">
+              {getRelativeTime(offer.updated_at)}
+            </span>
+          </div>
+
+          {showCompare && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onCompareToggle?.(offer);
+              }}
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-all duration-200 z-30 ${
+                isSelected
+                  ? "bg-accent text-background"
+                  : "border border-border text-gray-400 hover:border-accent/50 hover:text-accent"
+              }`}
+            >
+              {isSelected ? "Added \u2713" : "Compare"}
+            </button>
+          )}
         </div>
       </div>
     </a>
