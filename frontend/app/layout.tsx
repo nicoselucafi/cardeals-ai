@@ -9,11 +9,11 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "CarDealsAI - Find Real Car Lease Deals in LA",
-  description: "AI-powered search for Toyota, Honda, and Tesla lease and finance offers in Los Angeles. Every deal links to its source.",
-  keywords: ["Toyota", "Honda", "Tesla", "lease", "car deals", "Los Angeles", "AI", "finance"],
+  description: "AI-powered search for Toyota and Honda lease and finance offers in Los Angeles. Every deal links to its source.",
+  keywords: ["Toyota", "Honda", "lease", "car deals", "Los Angeles", "AI", "finance"],
   openGraph: {
     title: "CarDealsAI - Find Real Car Lease Deals",
-    description: "Search current Toyota, Honda, and Tesla offers in LA. Every deal links to its source.",
+    description: "Search current Toyota and Honda offers in LA. Every deal links to its source.",
     type: "website",
   },
 };

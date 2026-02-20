@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isPremium: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null; confirmed: boolean }>;
   signOut: () => Promise<void>;
@@ -19,6 +20,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPremium, setIsPremium] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -40,6 +42,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, [supabase.auth]);
+
+  // Fetch premium status when session is available
+  useEffect(() => {
+    if (!session?.access_token) {
+      setIsPremium(false);
+      return;
+    }
+
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/chat/usage`,
+      {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      }
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.is_premium !== undefined) {
+          setIsPremium(data.is_premium);
+        }
+      })
+      .catch(() => {});
+  }, [session?.access_token]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -65,11 +91,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setIsPremium(false);
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, session, loading, signIn, signUp, signOut }}
+      value={{ user, session, loading, isPremium, signIn, signUp, signOut }}
     >
       {children}
     </AuthContext.Provider>

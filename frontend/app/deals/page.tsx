@@ -11,12 +11,11 @@ import { Lock, GitCompareArrows, X } from "lucide-react";
 
 const MAX_COMPARE = 3;
 
-const MAKES = ["All Makes", "Toyota", "Honda", "Tesla"];
+const MAKES = ["All Makes", "Toyota", "Honda"];
 const MODELS: Record<string, string[]> = {
   "All Makes": ["All Models"],
   "Toyota": ["All Models", "RAV4", "Camry", "Corolla", "Highlander", "Tacoma", "4Runner", "Prius", "Sienna", "Tundra", "Corolla Cross", "Venza", "bZ4X"],
   "Honda": ["All Models", "Accord", "Civic", "CR-V", "HR-V", "Pilot", "Passport", "Odyssey", "Ridgeline", "Prologue"],
-  "Tesla": ["All Models", "Model 3", "Model Y", "Model S", "Model X", "Cybertruck"],
 };
 const OFFER_TYPES = ["All Types", "lease", "finance"];
 const SORT_OPTIONS = [
@@ -171,27 +170,27 @@ export default function DealsPage() {
         </div>
       )}
 
-      <div className="px-4 py-8">
+      <div className={`px-3 sm:px-4 py-6 sm:py-8 ${compareOffers.length > 0 && !showComparePanel ? "pb-20 sm:pb-24" : ""}`}>
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Current Deals</h1>
-            <p className="text-gray-400">
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Current Deals</h1>
+            <p className="text-sm sm:text-base text-gray-400">
               Browse all active lease and finance offers from dealers in LA.
               {" "}Select up to {MAX_COMPARE} deals to compare.
             </p>
           </div>
 
           {/* Filters Bar */}
-          <div className="bg-background-card border border-border rounded-xl p-4 mb-6">
-            <div className="flex flex-wrap items-center gap-4">
+          <div className="bg-background-card border border-border rounded-xl p-3 sm:p-4 mb-6">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-4">
               {/* Make Filter */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-400">Make:</label>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <label className="text-xs sm:text-sm text-gray-400 shrink-0">Make:</label>
                 <select
                   value={selectedMake}
                   onChange={(e) => setSelectedMake(e.target.value)}
-                  className="bg-background-secondary border border-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent"
+                  className="bg-background-secondary border border-border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-white text-xs sm:text-sm focus:outline-none focus:border-accent w-full sm:w-auto"
                 >
                   {MAKES.map((make) => (
                     <option key={make} value={make}>
@@ -202,12 +201,12 @@ export default function DealsPage() {
               </div>
 
               {/* Model Filter */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-400">Model:</label>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <label className="text-xs sm:text-sm text-gray-400 shrink-0">Model:</label>
                 <select
                   value={selectedModel}
                   onChange={(e) => setSelectedModel(e.target.value)}
-                  className="bg-background-secondary border border-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent"
+                  className="bg-background-secondary border border-border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-white text-xs sm:text-sm focus:outline-none focus:border-accent w-full sm:w-auto"
                 >
                   {(MODELS[selectedMake] || MODELS["All Makes"]).map((model) => (
                     <option key={model} value={model}>
@@ -218,12 +217,12 @@ export default function DealsPage() {
               </div>
 
               {/* Type Filter */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-400">Type:</label>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <label className="text-xs sm:text-sm text-gray-400 shrink-0">Type:</label>
                 <select
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value)}
-                  className="bg-background-secondary border border-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent"
+                  className="bg-background-secondary border border-border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-white text-xs sm:text-sm focus:outline-none focus:border-accent w-full sm:w-auto"
                 >
                   {OFFER_TYPES.map((type) => (
                     <option key={type} value={type}>
@@ -234,12 +233,12 @@ export default function DealsPage() {
               </div>
 
               {/* Sort */}
-              <div className="flex items-center gap-2 ml-auto">
-                <label className="text-sm text-gray-400">Sort:</label>
+              <div className="flex items-center gap-1.5 sm:gap-2 sm:ml-auto">
+                <label className="text-xs sm:text-sm text-gray-400 shrink-0">Sort:</label>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-background-secondary border border-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent"
+                  className="bg-background-secondary border border-border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-white text-xs sm:text-sm focus:outline-none focus:border-accent w-full sm:w-auto"
                 >
                   {SORT_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -316,17 +315,17 @@ export default function DealsPage() {
 
       {/* Sticky bottom bar when offers selected */}
       {compareOffers.length > 0 && !showComparePanel && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background-card/95 backdrop-blur-md border-t border-border px-4 py-3">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-400">
-                {compareOffers.length} of {MAX_COMPARE} selected
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background-card/95 backdrop-blur-md border-t border-border px-3 sm:px-4 py-2.5 sm:py-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <span className="text-xs sm:text-sm text-gray-400 shrink-0">
+                {compareOffers.length}/{MAX_COMPARE}
               </span>
-              <div className="flex gap-2">
+              <div className="flex gap-1.5 sm:gap-2 overflow-x-auto min-w-0">
                 {compareOffers.map((o) => (
                   <span
                     key={o.id}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-accent/10 border border-accent/30 text-xs text-accent"
+                    className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md bg-accent/10 border border-accent/30 text-[10px] sm:text-xs text-accent whitespace-nowrap shrink-0"
                   >
                     {o.model}
                     <button
@@ -340,20 +339,20 @@ export default function DealsPage() {
                 ))}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <button
                 onClick={() => setCompareOffers([])}
-                className="px-3 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-400 hover:text-white transition-colors"
               >
                 Clear
               </button>
               <button
                 onClick={handleOpenCompare}
                 disabled={compareOffers.length < 2}
-                className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-dim text-background font-medium text-sm rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-accent hover:bg-accent-dim text-background font-medium text-xs sm:text-sm rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <GitCompareArrows className="w-4 h-4" />
-                Compare {compareOffers.length >= 2 ? `(${compareOffers.length})` : ""}
+                <span className="hidden sm:inline">Compare</span> {compareOffers.length >= 2 ? `(${compareOffers.length})` : ""}
               </button>
             </div>
           </div>

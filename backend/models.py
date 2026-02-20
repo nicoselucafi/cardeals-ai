@@ -191,6 +191,7 @@ class ChatUsage(Base):
         default=uuid.uuid4
     )
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    source: Mapped[str] = mapped_column(String(20), default="chat")
     used_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now()

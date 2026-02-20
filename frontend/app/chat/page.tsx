@@ -13,7 +13,7 @@ const exampleQueries = [
   "Cheapest Toyota lease",
   "RAV4 under $350/month",
   "Honda Civic deals",
-  "Tesla Model 3 offers",
+  "Best deals under $300/mo",
   "Best deals under $400/mo",
   "CR-V lease specials",
 ];
@@ -58,7 +58,7 @@ function LimitReachedBanner() {
         Daily limit reached
       </h3>
       <p className="text-gray-400 mb-4">
-        You've used all 5 free AI searches for today. Your limit resets at
+        You've used all your free AI searches for today. Your limit resets at
         midnight UTC.
       </p>
       <div className="space-y-3">
@@ -139,7 +139,7 @@ function ChatContent() {
         {
           method: "POST",
           headers,
-          body: JSON.stringify({ message: query }),
+          body: JSON.stringify({ message: query, source: "chat" }),
         }
       );
 
@@ -196,7 +196,7 @@ function ChatContent() {
         switch (error.message) {
           case "daily_limit_reached":
             errorMessage =
-              "You've used all 5 free AI searches for today. Your limit resets at midnight UTC. In the meantime, you can browse all deals on the Deals page!";
+              "You've used all your free AI searches for today. Your limit resets at midnight UTC. In the meantime, you can browse all deals on the Deals page!";
             break;
           case "auth_required":
             errorMessage = "Please sign in to use the AI chat.";
@@ -281,37 +281,36 @@ function ChatContent() {
     <div className="min-h-screen">
       {/* Empty state - show when no messages */}
       {messages.length === 0 && !isLoading && (
-        <div className="flex flex-col items-center justify-center px-4 pt-16 pb-8">
+        <div className="flex flex-col items-center justify-center px-4 pt-8 sm:pt-16 pb-8">
           {/* AI Bot Icon */}
-          <div className="w-20 h-20 rounded-full bg-accent/20 flex items-center justify-center mb-6 border border-accent/30">
-            <Bot className="w-10 h-10 text-accent" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-accent/20 flex items-center justify-center mb-4 sm:mb-6 border border-accent/30">
+            <Bot className="w-8 h-8 sm:w-10 sm:h-10 text-accent" />
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-3 sm:mb-4">
             <span className="text-white">AI-Powered </span>
             <span className="text-accent">Deal Search</span>
           </h1>
 
-          <p className="text-gray-400 text-center max-w-xl mb-4 text-lg">
-            Ask me anything about Toyota, Honda, or Tesla lease and finance
-            offers in Los Angeles. I'll search our database and find the best
-            matches for you.
+          <p className="text-gray-400 text-center max-w-xl mb-4 text-sm sm:text-lg">
+            Ask me anything about Toyota and Honda lease and finance
+            offers in Los Angeles. I'll find the best matches for you.
           </p>
 
           {/* Usage counter */}
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             <UsageCounter remaining={remainingPrompts} limit={dailyLimit} />
           </div>
 
           {/* Limit reached banner */}
           {limitReached ? (
-            <div className="w-full max-w-lg mb-8">
+            <div className="w-full max-w-lg mb-8 px-2">
               <LimitReachedBanner />
             </div>
           ) : (
             <>
               {/* Search Input */}
-              <div className="w-full max-w-2xl mb-8">
+              <div className="w-full max-w-2xl mb-6 sm:mb-8">
                 <ChatInput
                   onSubmit={handleSearch}
                   isLoading={isLoading}
@@ -320,12 +319,12 @@ function ChatContent() {
               </div>
 
               {/* Example Queries */}
-              <div className="flex flex-wrap justify-center gap-2 mb-12">
+              <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 mb-8 sm:mb-12">
                 {exampleQueries.map((query) => (
                   <button
                     key={query}
                     onClick={() => handleExampleClick(query)}
-                    className="px-4 py-2 rounded-full border border-border text-sm text-gray-400 hover:text-accent hover:border-accent/50 transition-all"
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-border text-xs sm:text-sm text-gray-400 hover:text-accent hover:border-accent/50 transition-all"
                   >
                     {query}
                   </button>
@@ -335,24 +334,24 @@ function ChatContent() {
           )}
 
           {/* Capabilities */}
-          <div className="grid md:grid-cols-3 gap-6 max-w-3xl w-full">
-            <div className="bg-background-card border border-border rounded-xl p-5 text-center">
-              <Sparkles className="w-6 h-6 text-accent mx-auto mb-3" />
-              <h3 className="font-medium mb-2">Natural Language</h3>
-              <p className="text-gray-400 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-3xl w-full">
+            <div className="bg-background-card border border-border rounded-xl p-4 sm:p-5 text-center">
+              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-accent mx-auto mb-2 sm:mb-3" />
+              <h3 className="font-medium mb-1 sm:mb-2 text-sm sm:text-base">Natural Language</h3>
+              <p className="text-gray-400 text-xs sm:text-sm">
                 Ask in plain English, no filters needed
               </p>
             </div>
-            <div className="bg-background-card border border-border rounded-xl p-5 text-center">
-              <Bot className="w-6 h-6 text-accent mx-auto mb-3" />
-              <h3 className="font-medium mb-2">Smart Matching</h3>
-              <p className="text-gray-400 text-sm">
+            <div className="bg-background-card border border-border rounded-xl p-4 sm:p-5 text-center">
+              <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-accent mx-auto mb-2 sm:mb-3" />
+              <h3 className="font-medium mb-1 sm:mb-2 text-sm sm:text-base">Smart Matching</h3>
+              <p className="text-gray-400 text-xs sm:text-sm">
                 AI finds deals that match your criteria
               </p>
             </div>
-            <div className="bg-background-card border border-border rounded-xl p-5 text-center">
+            <div className="bg-background-card border border-border rounded-xl p-4 sm:p-5 text-center">
               <svg
-                className="w-6 h-6 text-accent mx-auto mb-3"
+                className="w-5 h-5 sm:w-6 sm:h-6 text-accent mx-auto mb-2 sm:mb-3"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -364,8 +363,8 @@ function ChatContent() {
                   d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
                 />
               </svg>
-              <h3 className="font-medium mb-2">Verified Sources</h3>
-              <p className="text-gray-400 text-sm">
+              <h3 className="font-medium mb-1 sm:mb-2 text-sm sm:text-base">Verified Sources</h3>
+              <p className="text-gray-400 text-xs sm:text-sm">
                 Every deal links to the dealer's site
               </p>
             </div>
@@ -375,7 +374,7 @@ function ChatContent() {
 
       {/* Chat Messages - Show when there are messages */}
       {(messages.length > 0 || isLoading) && (
-        <div className="max-w-4xl mx-auto px-4 pt-8 pb-32">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 pt-4 sm:pt-8 pb-36 sm:pb-44">
           <ChatMessages messages={messages} isLoading={isLoading} />
 
           {/* Limit reached inline */}
@@ -387,9 +386,9 @@ function ChatContent() {
 
           {/* Floating input at bottom */}
           {!limitReached && (
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background to-transparent">
+            <div className="fixed bottom-0 left-0 right-0 z-50 p-2.5 sm:p-4 bg-background border-t border-border">
               <div className="max-w-2xl mx-auto">
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex flex-col items-center gap-1.5 sm:gap-2">
                   <UsageCounter
                     remaining={remainingPrompts}
                     limit={dailyLimit}

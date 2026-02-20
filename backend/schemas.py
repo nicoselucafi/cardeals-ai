@@ -115,6 +115,7 @@ class ChatRequest(BaseModel):
     """Request body for chat endpoint."""
     message: str = Field(..., min_length=1, max_length=5000, description="User's search query or comparison prompt")
     conversation_id: Optional[str] = Field(None, description="Optional conversation ID for context")
+    source: Optional[str] = Field("chat", description="Source context: 'chat' or 'compare'")
 
 
 class ChatResponse(BaseModel):

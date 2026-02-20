@@ -146,7 +146,7 @@ export default function ComparePanel({ selectedOffers, onClose, onRemoveOffer }:
         {
           method: "POST",
           headers,
-          body: JSON.stringify({ message: fullMessage }),
+          body: JSON.stringify({ message: fullMessage, source: "compare" }),
         }
       );
 
@@ -222,10 +222,10 @@ export default function ComparePanel({ selectedOffers, onClose, onRemoveOffer }:
   ];
 
   return (
-    <div className="bg-background-card border border-border rounded-xl shadow-lg animate-slide-down mx-4 lg:mx-auto lg:max-w-7xl mt-2">
+    <div className="bg-background-card border border-border rounded-xl shadow-lg animate-slide-down mx-2 sm:mx-4 lg:mx-auto lg:max-w-7xl mt-2">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-        <h2 className="text-lg font-bold text-white">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border">
+        <h2 className="text-base sm:text-lg font-bold text-white">
           Compare {selectedOffers.length} Offers
         </h2>
         <button
@@ -240,19 +240,19 @@ export default function ComparePanel({ selectedOffers, onClose, onRemoveOffer }:
       {/* Main content: table left + chat right */}
       <div className="flex flex-col lg:flex-row">
         {/* Comparison table */}
-        <div className="flex-1 lg:border-r lg:border-border px-6 py-4 overflow-x-auto">
-          <table className="w-full">
+        <div className="flex-1 lg:border-r lg:border-border px-3 sm:px-6 py-4 overflow-x-auto">
+          <table className="w-full min-w-0">
             <thead>
               <tr>
-                <th className="text-left text-xs text-gray-500 font-medium pb-3 pr-4 w-28"></th>
+                <th className="text-left text-xs text-gray-500 font-medium pb-3 pr-2 sm:pr-4 w-20 sm:w-28 sticky left-0 bg-background-card z-10"></th>
                 {selectedOffers.map((offer) => (
-                  <th key={offer.id} className="text-left pb-3 px-3 min-w-[150px]">
-                    <div className="flex items-start justify-between gap-2">
+                  <th key={offer.id} className="text-left pb-3 px-2 sm:px-3 min-w-[120px] sm:min-w-[150px]">
+                    <div className="flex items-start justify-between gap-1 sm:gap-2">
                       <div>
-                        <p className="text-sm font-semibold text-white">
+                        <p className="text-xs sm:text-sm font-semibold text-white">
                           {offer.year} {offer.model}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-[10px] sm:text-xs text-gray-400">
                           {offer.make} {offer.trim || ""}
                         </p>
                       </div>
@@ -272,11 +272,11 @@ export default function ComparePanel({ selectedOffers, onClose, onRemoveOffer }:
               {/* Static rows from offer data */}
               {staticRows.map((row) => (
                 <tr key={row.label} className="border-t border-border/50">
-                  <td className="text-xs text-gray-500 font-medium py-2.5 pr-4">{row.label}</td>
+                  <td className="text-[10px] sm:text-xs text-gray-500 font-medium py-2 sm:py-2.5 pr-2 sm:pr-4 sticky left-0 bg-background-card z-10">{row.label}</td>
                   {selectedOffers.map((offer) => (
                     <td
                       key={offer.id}
-                      className={`text-sm py-2.5 px-3 ${
+                      className={`text-xs sm:text-sm py-2 sm:py-2.5 px-2 sm:px-3 ${
                         row.bestId === offer.id ? "text-green-400 font-semibold" : "text-gray-300"
                       }`}
                     >
@@ -289,11 +289,11 @@ export default function ComparePanel({ selectedOffers, onClose, onRemoveOffer }:
               {/* Dynamic rows added by AI */}
               {dynamicRows.map((row) => (
                 <tr key={row.label} className="border-t border-accent/20 bg-accent/5">
-                  <td className="text-xs text-accent font-medium py-2.5 pr-4">{row.label}</td>
+                  <td className="text-[10px] sm:text-xs text-accent font-medium py-2 sm:py-2.5 pr-2 sm:pr-4 sticky left-0 bg-accent/5 z-10">{row.label}</td>
                   {selectedOffers.map((offer) => (
                     <td
                       key={offer.id}
-                      className={`text-sm py-2.5 px-3 ${
+                      className={`text-xs sm:text-sm py-2 sm:py-2.5 px-2 sm:px-3 ${
                         row.best === offer.id ? "text-green-400 font-semibold" : "text-gray-300"
                       }`}
                     >
@@ -306,10 +306,10 @@ export default function ComparePanel({ selectedOffers, onClose, onRemoveOffer }:
           </table>
         </div>
 
-        {/* AI Chat — right side */}
-        <div className="lg:w-[380px] flex flex-col border-t lg:border-t-0 border-border min-h-[320px]">
+        {/* AI Chat — right side on desktop, below on mobile */}
+        <div className="lg:w-[380px] flex flex-col border-t lg:border-t-0 border-border min-h-[280px] sm:min-h-[320px]">
           {/* Chat header */}
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50">
+          <div className="flex items-center gap-2 px-4 py-2.5 sm:py-3 border-b border-border/50">
             <div className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center border border-accent/30">
               <Bot className="w-3 h-3 text-accent" />
             </div>
@@ -317,7 +317,7 @@ export default function ComparePanel({ selectedOffers, onClose, onRemoveOffer }:
           </div>
 
           {/* Messages */}
-          <div ref={chatContainerRef} className="flex-1 max-h-[260px] overflow-y-auto px-4 py-3 space-y-3">
+          <div ref={chatContainerRef} className="flex-1 max-h-[200px] sm:max-h-[260px] overflow-y-auto px-3 sm:px-4 py-3 space-y-3">
             {messages.map((msg, i) => (
               <div key={i} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                 {msg.role === "assistant" && (
@@ -326,7 +326,7 @@ export default function ComparePanel({ selectedOffers, onClose, onRemoveOffer }:
                   </div>
                 )}
                 <div
-                  className={`max-w-[90%] rounded-lg px-3 py-2 text-sm ${
+                  className={`max-w-[90%] rounded-lg px-3 py-2 text-xs sm:text-sm ${
                     msg.role === "user"
                       ? "bg-accent text-background"
                       : "bg-background-secondary border border-border text-white"
@@ -349,7 +349,7 @@ export default function ComparePanel({ selectedOffers, onClose, onRemoveOffer }:
                   <Bot className="w-3 h-3 text-accent" />
                 </div>
                 <div className="bg-background-secondary border border-border rounded-lg px-3 py-2">
-                  <div className="flex items-center gap-2 text-gray-400 text-sm">
+                  <div className="flex items-center gap-2 text-gray-400 text-xs sm:text-sm">
                     <Loader2 className="w-3 h-3 animate-spin" />
                     <span>Analyzing...</span>
                   </div>
@@ -359,20 +359,20 @@ export default function ComparePanel({ selectedOffers, onClose, onRemoveOffer }:
           </div>
 
           {/* Chat input */}
-          <div className="px-4 py-3 border-t border-border/50 mt-auto">
+          <div className="px-3 sm:px-4 py-2.5 sm:py-3 border-t border-border/50 mt-auto">
             <form onSubmit={handleSubmit} className="flex items-center gap-2">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Compare horsepower, MPG, cargo space..."
+                placeholder="Compare horsepower, MPG..."
                 disabled={isLoading}
-                className="flex-1 px-3 py-2 rounded-lg bg-background-secondary border border-border text-white text-sm placeholder-gray-500 focus:outline-none focus:border-accent transition-colors disabled:opacity-50"
+                className="flex-1 px-3 py-2 rounded-lg bg-background-secondary border border-border text-white text-xs sm:text-sm placeholder-gray-500 focus:outline-none focus:border-accent transition-colors disabled:opacity-50"
               />
               <button
                 type="submit"
                 disabled={!input.trim() || isLoading}
-                className="p-2 rounded-lg bg-accent text-background hover:bg-accent-dim disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg bg-accent text-background hover:bg-accent-dim disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

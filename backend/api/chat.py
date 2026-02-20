@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,7 +13,7 @@ from rate_limit import limiter
 from schemas import ChatRequest, ChatResponse, ChatUsageResponse
 from services.ai_agent import process_chat
 from services.offer_search import log_search
-from services.usage import check_chat_allowed, get_daily_chat_usage, record_chat_usage, FREE_DAILY_LIMIT
+from services.usage import check_chat_allowed, get_daily_chat_usage, record_chat_usage, _get_limit_for_source
 
 logger = logging.getLogger(__name__)
 
@@ -31,13 +31,14 @@ async def chat(
     """
     Chat endpoint for natural language car deal searches.
 
-    Requires authentication. Free users are limited to 5 prompts per day.
+    Requires authentication. Free users get 10 prompts/day per source.
     Premium users have unlimited access.
     """
-    logger.info(f"Chat request from {current_user.email}: {body.message[:100]}...")
+    source = body.source or "chat"
+    logger.info(f"Chat request [{source}] from {current_user.email}: {body.message[:100]}...")
 
-    # Check usage limits
-    allowed, used, limit = await check_chat_allowed(db, current_user)
+    # Check usage limits (tracked per source)
+    allowed, used, limit = await check_chat_allowed(db, current_user, source)
     if not allowed:
         return JSONResponse(
             status_code=429,
@@ -53,8 +54,8 @@ async def chat(
     # Process chat with AI agent
     response_text, offers, search_params = await process_chat(db, body.message)
 
-    # Record usage
-    await record_chat_usage(db, current_user.id)
+    # Record usage with source
+    await record_chat_usage(db, current_user.id, source)
 
     # Log the search
     await log_search(
@@ -85,10 +86,11 @@ async def chat(
 async def chat_usage(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    source: str = Query("chat", description="Source: 'chat' or 'compare'"),
 ) -> ChatUsageResponse:
     """Get current chat usage for the authenticated user without consuming a prompt."""
-    used = await get_daily_chat_usage(db, current_user.id)
-    limit = -1 if current_user.is_premium else FREE_DAILY_LIMIT
+    used = await get_daily_chat_usage(db, current_user.id, source)
+    limit = -1 if current_user.is_premium else _get_limit_for_source(source)
     remaining = -1 if current_user.is_premium else max(0, limit - used)
 
     return ChatUsageResponse(

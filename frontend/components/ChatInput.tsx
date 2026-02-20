@@ -41,18 +41,18 @@ export default function ChatInput({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={isLoading}
-          className="w-full px-6 py-4 pr-24 rounded-full bg-background-secondary border border-border
-                     text-white placeholder-gray-500
+          className="w-full px-4 sm:px-6 py-3 sm:py-4 pr-20 sm:pr-24 rounded-full bg-background-secondary border border-border
+                     text-sm sm:text-base text-white placeholder-gray-500
                      focus:outline-none focus:border-accent focus:shadow-glow
                      transition-all duration-300
                      disabled:opacity-50 disabled:cursor-not-allowed"
         />
 
-        <div className="absolute right-2 flex items-center gap-1">
+        <div className="absolute right-1.5 sm:right-2 flex items-center gap-0.5 sm:gap-1">
           {/* Mic button (decorative for now) */}
           <button
             type="button"
-            className="p-2 text-gray-400 hover:text-accent transition-colors"
+            className="p-1.5 sm:p-2 text-gray-400 hover:text-accent transition-colors hidden sm:block"
             title="Voice input (coming soon)"
           >
             <Mic className="w-5 h-5" />
@@ -67,9 +67,9 @@ export default function ChatInput({
                        transition-all duration-200"
           >
             {isLoading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
             ) : (
-              <Send className="w-5 h-5" />
+              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
             )}
           </button>
         </div>
