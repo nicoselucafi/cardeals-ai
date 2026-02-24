@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Offer } from "@/lib/types";
 import { formatCurrency, getConfidencePercent, getRelativeTime } from "@/lib/utils";
+import { isOfferSaved, toggleSavedOffer } from "@/lib/savedOffers";
 import {
   ArrowLeft,
   ExternalLink,
@@ -16,6 +17,9 @@ import {
   Car,
   AlertCircle,
   Loader2,
+  Heart,
+  Phone,
+  ChevronDown,
 } from "lucide-react";
 
 export default function OfferDetailPage() {
@@ -23,6 +27,7 @@ export default function OfferDetailPage() {
   const [offer, setOffer] = useState<Offer | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     async function fetchOffer() {
@@ -42,7 +47,8 @@ export default function OfferDetailPage() {
 
         const data = await response.json();
         setOffer(data);
-      } catch (err) {
+        setSaved(isOfferSaved(data.id));
+      } catch {
         setError("Failed to connect to server");
       } finally {
         setLoading(false);
@@ -83,15 +89,20 @@ export default function OfferDetailPage() {
 
   const confidencePercent = getConfidencePercent(offer.confidence_score);
 
+  const handleToggleSave = () => {
+    const nowSaved = toggleSavedOffer(offer.id);
+    setSaved(nowSaved);
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Back button */}
       <Link
-        href="/"
+        href="/deals"
         className="inline-flex items-center gap-2 text-gray-400 hover:text-accent transition-colors mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
-        Back to Search
+        Back to Deals
       </Link>
 
       <div className="bg-background-card border border-border rounded-2xl overflow-hidden">
@@ -115,7 +126,7 @@ export default function OfferDetailPage() {
               <p className="text-gray-400 flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
                 {offer.dealer_name}
-                {offer.dealer_city && ` • ${offer.dealer_city}, CA`}
+                {offer.dealer_city && ` \u2022 ${offer.dealer_city}, CA`}
               </p>
             </div>
 
@@ -191,6 +202,23 @@ export default function OfferDetailPage() {
             )}
           </div>
 
+          {/* Dealer Info */}
+          {offer.dealer_city && (
+            <div className="bg-background-secondary border border-border rounded-xl p-5 mb-6">
+              <h2 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
+                <Phone className="w-4 h-4 text-accent" />
+                Dealer Info
+              </h2>
+              <div className="space-y-2 text-sm">
+                <p className="text-gray-400">{offer.dealer_name}</p>
+                <p className="text-gray-500 flex items-center gap-2">
+                  <MapPin className="w-3.5 h-3.5" />
+                  {offer.dealer_city}, CA
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* AI Score */}
           <div className="flex items-center gap-4 mb-6 p-4 bg-background-secondary border border-border rounded-lg">
             <div className="flex-1">
@@ -211,24 +239,44 @@ export default function OfferDetailPage() {
             </div>
           </div>
 
-          {/* CTA */}
-          {offer.source_url && (
-            <a
-              href={offer.source_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-4 rounded-xl bg-accent text-background hover:bg-accent-dim transition-colors font-semibold text-lg"
+          {/* CTA + Save */}
+          <div className="flex gap-3 mb-6">
+            {offer.source_url && (
+              <a
+                href={offer.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-accent text-background hover:bg-accent-dim transition-colors font-semibold text-lg"
+              >
+                View at {offer.dealer_name}
+                <ExternalLink className="w-5 h-5" />
+              </a>
+            )}
+            <button
+              onClick={handleToggleSave}
+              className="px-6 py-4 rounded-xl border border-border hover:border-accent/50 transition-colors"
+              aria-label={saved ? "Remove from saved" : "Save deal"}
             >
-              View at {offer.dealer_name}
-              <ExternalLink className="w-5 h-5" />
-            </a>
-          )}
+              <Heart
+                className={`w-6 h-6 transition-colors ${
+                  saved ? "text-accent fill-accent" : "text-gray-400 hover:text-accent"
+                }`}
+              />
+            </button>
+          </div>
 
-          {/* Disclaimer */}
-          <p className="text-xs text-gray-500 mt-6 text-center">
-            Prices and availability subject to change. Contact dealer for current offers.
-            This data was automatically extracted and may contain errors.
-          </p>
+          {/* Disclaimer (collapsible) */}
+          <details className="text-xs text-gray-500 group">
+            <summary className="cursor-pointer hover:text-gray-400 transition-colors flex items-center gap-1">
+              <ChevronDown className="w-3 h-3 transition-transform group-open:rotate-180" />
+              Terms & Disclaimer
+            </summary>
+            <p className="mt-2 pl-4 border-l-2 border-border">
+              Prices and availability subject to change. Contact dealer for current offers.
+              This data was automatically extracted and may contain errors. Always verify
+              details directly with the dealership before making any decisions.
+            </p>
+          </details>
         </div>
       </div>
     </div>

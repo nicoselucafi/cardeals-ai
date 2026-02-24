@@ -111,11 +111,23 @@ class SearchResponse(BaseModel):
 
 # ----- Chat Schemas -----
 
+class ChatMessageRole(str, Enum):
+    user = "user"
+    assistant = "assistant"
+
+
+class ChatMessageInput(BaseModel):
+    """A single message in conversation history."""
+    role: ChatMessageRole = Field(..., description="Message role: 'user' or 'assistant'")
+    content: str = Field(..., max_length=2000, description="Message content")
+
+
 class ChatRequest(BaseModel):
     """Request body for chat endpoint."""
     message: str = Field(..., min_length=1, max_length=5000, description="User's search query or comparison prompt")
     conversation_id: Optional[str] = Field(None, description="Optional conversation ID for context")
     source: Optional[str] = Field("chat", description="Source context: 'chat' or 'compare'")
+    history: Optional[list[ChatMessageInput]] = Field(None, max_length=6, description="Previous conversation messages for context")
 
 
 class ChatResponse(BaseModel):

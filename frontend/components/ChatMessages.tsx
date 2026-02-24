@@ -1,9 +1,9 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { Offer } from "@/lib/types";
 import OfferCard from "./OfferCard";
-import OfferCardSkeleton from "./OfferCardSkeleton";
 import { Bot, User, Loader2 } from "lucide-react";
 
 interface Message {
@@ -18,6 +18,13 @@ interface ChatMessagesProps {
 }
 
 export default function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change or loading state changes
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isLoading]);
+
   return (
     <div className="space-y-6">
       {messages.map((message, index) => (
@@ -74,18 +81,15 @@ export default function ChatMessages({ messages, isLoading }: ChatMessagesProps)
             <div className="bg-background-secondary border border-border rounded-2xl px-4 py-3">
               <div className="flex items-center gap-2 text-gray-400">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Searching for deals...</span>
+                <span>Thinking...</span>
               </div>
             </div>
           </div>
-          {/* Skeleton cards while loading */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-            <OfferCardSkeleton />
-            <OfferCardSkeleton />
-            <OfferCardSkeleton />
-          </div>
         </div>
       )}
+
+      {/* Scroll anchor */}
+      <div ref={bottomRef} />
     </div>
   );
 }

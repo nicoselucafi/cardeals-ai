@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, FormEvent, KeyboardEvent } from "react";
-import { Send, Mic, Loader2 } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
 
 interface ChatInputProps {
   onSubmit: (message: string) => void;
@@ -49,15 +49,6 @@ export default function ChatInput({
         />
 
         <div className="absolute right-1.5 sm:right-2 flex items-center gap-0.5 sm:gap-1">
-          {/* Mic button (decorative for now) */}
-          <button
-            type="button"
-            className="p-1.5 sm:p-2 text-gray-400 hover:text-accent transition-colors hidden sm:block"
-            title="Voice input (coming soon)"
-          >
-            <Mic className="w-5 h-5" />
-          </button>
-
           {/* Submit button */}
           <button
             type="submit"

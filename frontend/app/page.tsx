@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -8,14 +8,98 @@ import { Offer } from "@/lib/types";
 import ChatInput from "@/components/ChatInput";
 import OfferCard from "@/components/OfferCard";
 import OfferCardSkeleton from "@/components/OfferCardSkeleton";
-import { Sparkles, Search, Link as LinkIcon, Bot, ArrowRight, TrendingUp } from "lucide-react";
+import { Sparkles, Search, Link as LinkIcon, Bot, ArrowRight, TrendingUp, Car } from "lucide-react";
 
 const exampleQueries = [
   "Cheapest Toyota lease",
   "RAV4 under $350/month",
-  "Honda Civic deals",
+  "Camry lease deals",
   "Best deals under $300/mo",
 ];
+
+const demoQueries = [
+  { query: "Best RAV4 lease under $350/mo", results: [
+    { model: "RAV4 LE", price: "$289/mo", dealer: "Longo Toyota", city: "El Monte" },
+    { model: "RAV4 XLE", price: "$329/mo", dealer: "Toyota Santa Monica", city: "Santa Monica" },
+  ]},
+  { query: "Cheapest Toyota lease in LA", results: [
+    { model: "Corolla LE", price: "$219/mo", dealer: "Keyes Toyota", city: "Van Nuys" },
+    { model: "Corolla SE", price: "$239/mo", dealer: "Toyota of Glendora", city: "Glendora" },
+  ]},
+  { query: "Camry deals under $400/mo", results: [
+    { model: "Camry SE", price: "$349/mo", dealer: "Toyota of Downtown LA", city: "Los Angeles" },
+    { model: "Camry LE", price: "$319/mo", dealer: "Longo Toyota", city: "El Monte" },
+  ]},
+];
+
+function TypingDemo() {
+  const [demoIdx, setDemoIdx] = useState(0);
+  const [charIdx, setCharIdx] = useState(0);
+  const [showResults, setShowResults] = useState(false);
+  const [phase, setPhase] = useState<"typing" | "results" | "pause">("typing");
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const demo = demoQueries[demoIdx];
+  const displayedText = demo.query.slice(0, charIdx);
+
+  useEffect(() => {
+    if (phase === "typing") {
+      if (charIdx < demo.query.length) {
+        timerRef.current = setTimeout(() => setCharIdx((c) => c + 1), 45);
+      } else {
+        timerRef.current = setTimeout(() => {
+          setShowResults(true);
+          setPhase("results");
+        }, 400);
+      }
+    } else if (phase === "results") {
+      timerRef.current = setTimeout(() => setPhase("pause"), 4000);
+    } else if (phase === "pause") {
+      timerRef.current = setTimeout(() => {
+        setShowResults(false);
+        setCharIdx(0);
+        setDemoIdx((i) => (i + 1) % demoQueries.length);
+        setPhase("typing");
+      }, 600);
+    }
+    return () => clearTimeout(timerRef.current);
+  }, [phase, charIdx, demo.query.length]);
+
+  return (
+    <div className="w-full max-w-lg mx-auto">
+      {/* Fake search bar */}
+      <div className="bg-background-card border border-border rounded-xl px-4 py-3 mb-4">
+        <div className="flex items-center gap-3">
+          <Search className="w-4 h-4 text-gray-500 flex-shrink-0" />
+          <span className="text-sm text-white min-h-[20px]">
+            {displayedText}
+            <span className="inline-block w-[2px] h-4 bg-accent ml-0.5 align-middle animate-blink" />
+          </span>
+        </div>
+      </div>
+
+      {/* Fake result cards */}
+      <div className={`space-y-2 transition-opacity duration-300 ${showResults ? "opacity-100" : "opacity-0"}`}>
+        {demo.results.map((r, i) => (
+          <div
+            key={`${demoIdx}-${i}`}
+            className={`bg-background-card border border-border rounded-lg p-3 flex items-center gap-3 ${showResults ? "animate-fade-in-up" : ""}`}
+            style={{ animationDelay: `${i * 150}ms`, opacity: showResults ? undefined : 0 }}
+          >
+            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0 border border-accent/20">
+              <Car className="w-5 h-5 text-accent/60" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">2025 Toyota {r.model}</p>
+              <p className="text-xs text-gray-500 truncate">{r.dealer} &bull; {r.city}</p>
+            </div>
+            <span className="text-accent font-bold text-sm whitespace-nowrap">{r.price}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -170,16 +254,9 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Example Queries Preview */}
-        <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 mb-8 sm:mb-12">
-          {exampleQueries.map((query) => (
-            <span
-              key={query}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-border text-xs sm:text-sm text-gray-500"
-            >
-              &ldquo;{query}&rdquo;
-            </span>
-          ))}
+        {/* Live Demo */}
+        <div className="w-full max-w-lg px-4 mb-8 sm:mb-12">
+          <TypingDemo />
         </div>
 
         {/* How it works */}

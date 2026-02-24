@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useRef, MouseEvent as ReactMouseEvent } from "react";
+import { useState, useEffect, useRef, MouseEvent as ReactMouseEvent } from "react";
 import Image from "next/image";
 import { Offer } from "@/lib/types";
 import { formatCurrency, getConfidencePercent, getRelativeTime } from "@/lib/utils";
 import { getCarImageConfig, getVehicleType } from "@/lib/carImages";
-import { Car, Truck, Zap } from "lucide-react";
+import { Car, Truck, Zap, Heart } from "lucide-react";
+import { isOfferSaved, toggleSavedOffer } from "@/lib/savedOffers";
 
 interface OfferCardProps {
   offer: Offer;
@@ -29,6 +30,12 @@ export default function OfferCard({ offer, showCompare, isSelected, onCompareTog
   const [imageError, setImageError] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  // Check saved state on mount
+  useEffect(() => {
+    setSaved(isOfferSaved(offer.id));
+  }, [offer.id]);
   const cardRef = useRef<HTMLAnchorElement>(null);
   const confidencePercent = getConfidencePercent(offer.confidence_score);
   const imageConfig = getCarImageConfig(offer.make, offer.model);
@@ -180,7 +187,7 @@ export default function OfferCard({ offer, showCompare, isSelected, onCompareTog
           </div>
         )}
 
-        {/* AI Score + Compare button row */}
+        {/* AI Score + action buttons row */}
         <div className="flex items-center justify-between">
           <div>
             <span className="text-xs text-gray-500">
@@ -191,22 +198,40 @@ export default function OfferCard({ offer, showCompare, isSelected, onCompareTog
             </span>
           </div>
 
-          {showCompare && (
+          <div className="flex items-center gap-1.5">
+            {showCompare && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onCompareToggle?.(offer);
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-medium transition-all duration-200 z-30 ${
+                  isSelected
+                    ? "bg-accent text-background"
+                    : "border border-border text-gray-400 hover:border-accent/50 hover:text-accent"
+                }`}
+              >
+                {isSelected ? "Added \u2713" : "Compare"}
+              </button>
+            )}
             <button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                onCompareToggle?.(offer);
+                const nowSaved = toggleSavedOffer(offer.id);
+                setSaved(nowSaved);
               }}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-all duration-200 z-30 ${
-                isSelected
-                  ? "bg-accent text-background"
-                  : "border border-border text-gray-400 hover:border-accent/50 hover:text-accent"
-              }`}
+              className="p-1.5 rounded-lg transition-all duration-200 z-30 hover:bg-white/5"
+              aria-label={saved ? "Remove from saved" : "Save deal"}
             >
-              {isSelected ? "Added \u2713" : "Compare"}
+              <Heart
+                className={`w-4 h-4 transition-colors ${
+                  saved ? "text-accent fill-accent" : "text-gray-500 hover:text-accent"
+                }`}
+              />
             </button>
-          )}
+          </div>
         </div>
       </div>
     </a>

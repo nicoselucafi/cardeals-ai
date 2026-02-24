@@ -51,8 +51,9 @@ async def chat(
             },
         )
 
-    # Process chat with AI agent
-    response_text, offers, search_params = await process_chat(db, body.message)
+    # Process chat with AI agent (pass conversation history for context)
+    history = [{"role": m.role, "content": m.content} for m in body.history] if body.history else None
+    response_text, offers, search_params = await process_chat(db, body.message, history=history)
 
     # Record usage with source
     await record_chat_usage(db, current_user.id, source)

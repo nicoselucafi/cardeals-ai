@@ -36,8 +36,8 @@ You have access to a database of current vehicle offers from dealers in LA:
 - Scott Robinson Honda (Torrance)
 
 When users ask about car deals, use the search_offers function to find relevant offers. You can filter by:
-- make: Brand name (Toyota, Honda, Tesla)
-- model: Model name (RAV4, Camry, Civic, CR-V, Model 3, etc.)
+- make: Brand name (Toyota, Honda)
+- model: Model name (RAV4, Camry, Civic, CR-V, etc.)
 - max_monthly_payment: Maximum monthly payment they want to pay
 - offer_type: "lease" or "finance"
 - max_down_payment: Maximum down payment
@@ -48,11 +48,13 @@ After getting search results, provide a helpful response that:
 3. Mentions the make, model, dealer and key terms (monthly payment, down payment, term)
 4. Encourages them to check the source link for full details
 
-If no offers match their criteria, suggest alternatives (higher budget, different model, different brand, etc.).
+If search results include a "SIMILAR OFFERS" section, it means the exact query had no matches but we found related deals. Present those as helpful suggestions — explain why the original search had no exact matches, then recommend the similar deals the user might be interested in.
 
 If they ask about brands other than Toyota or Honda, or locations outside LA, politely explain that you currently only have Toyota and Honda deals in the Los Angeles area.
 
-Keep responses concise but helpful. Use natural, conversational language."""
+**General car questions:** You can also answer general questions about car models, trims, features, reliability, comparisons between models, fuel economy, safety ratings, etc. For example: "What's the difference between RAV4 LE and XLE?", "Is the Camry reliable?", "Which Toyota SUV is best for families?". Answer these directly using your knowledge without calling search_offers. If relevant, mention that you can also search for current deals on that model.
+
+Keep responses concise but helpful (under 250 words). Use natural, conversational language."""
 
 # Function definition for GPT-4
 SEARCH_FUNCTION = {
@@ -145,12 +147,41 @@ async def execute_search(
     return offers, filters_applied
 
 
+async def execute_fallback_search(
+    db: AsyncSession,
+    original_args: dict
+) -> list[OfferResponse]:
+    """Try broader searches when the original query returns no results."""
+    # Strategy 1: Keep make, drop model and payment filters
+    if original_args.get("model") or original_args.get("max_monthly_payment"):
+        params = SearchParams(
+            make=original_args.get("make"),
+            offer_type=original_args.get("offer_type"),
+            limit=5,
+            sort_by="monthly_payment"
+        )
+        offers, _ = await search_offers(db, params)
+        if offers:
+            return offers
+
+    # Strategy 2: Search all offers with no filters
+    params = SearchParams(limit=5, sort_by="monthly_payment")
+    offers, _ = await search_offers(db, params)
+    return offers
+
+
 async def process_chat(
     db: AsyncSession,
     message: str,
+    history: Optional[list[dict]] = None,
 ) -> tuple[str, list[OfferResponse], Optional[dict]]:
     """
     Process a chat message using GPT-4 with function calling.
+
+    Args:
+        db: Database session
+        message: Current user message
+        history: Optional list of previous messages [{"role": "user"|"assistant", "content": "..."}]
 
     Returns:
         Tuple of (response_text, offers_list, search_params_used)
@@ -159,8 +190,15 @@ async def process_chat(
 
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": message}
     ]
+
+    # Add conversation history (last 6 messages max to control costs)
+    if history:
+        for msg in history[-6:]:
+            if msg.get("role") in ("user", "assistant") and msg.get("content"):
+                messages.append({"role": msg["role"], "content": msg["content"]})
+
+    messages.append({"role": "user", "content": message})
 
     tools = [{"type": "function", "function": SEARCH_FUNCTION}]
 
@@ -190,8 +228,24 @@ async def process_chat(
                 # Execute the search
                 offers, filters_applied = await execute_search(db, function_args)
 
+                # If no results, try a broader fallback search
+                fallback_offers = []
+                if not offers:
+                    logger.info("No exact matches, trying fallback search...")
+                    fallback_offers = await execute_fallback_search(db, function_args)
+
                 # Format results for GPT-4
-                offers_summary = format_offers_summary(offers)
+                if offers:
+                    offers_summary = format_offers_summary(offers)
+                elif fallback_offers:
+                    offers_summary = (
+                        "No offers found matching the exact criteria.\n\n"
+                        "SIMILAR OFFERS you can recommend:\n"
+                        + format_offers_summary(fallback_offers)
+                    )
+                    offers = fallback_offers  # Return these to the frontend
+                else:
+                    offers_summary = "No offers found matching the criteria, and no similar offers are available right now."
 
                 # Add the function call and result to messages
                 messages.append(assistant_message.model_dump())
@@ -214,8 +268,8 @@ async def process_chat(
 
                 return response_text, offers, function_args
 
-        # No function call - direct response
-        response_text = assistant_message.content or "I'm here to help you find car deals in LA. I can search Toyota, Honda, and Tesla offers. What are you looking for?"
+        # No function call - direct response (general questions, greetings, etc.)
+        response_text = assistant_message.content or "I'm here to help you find car deals in LA. I can search Toyota and Honda offers, or answer questions about car models. What are you looking for?"
         logger.info(f"Direct response (no function call): {len(response_text)} chars")
         return response_text, [], None
 

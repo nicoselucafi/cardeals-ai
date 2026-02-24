@@ -1,21 +1,23 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import ChatInput from "@/components/ChatInput";
 import ChatMessages from "@/components/ChatMessages";
 import { useAuth } from "@/context/AuthContext";
 import { Offer } from "@/lib/types";
-import { Bot, Lock, Sparkles, Loader2, AlertCircle, Crown } from "lucide-react";
+import { Bot, Lock, Sparkles, Loader2, AlertCircle, Crown, RotateCcw } from "lucide-react";
+
+const CHAT_STORAGE_KEY = "cardealsai_chat_messages";
 
 const exampleQueries = [
   "Cheapest Toyota lease",
   "RAV4 under $350/month",
-  "Honda Civic deals",
+  "Camry lease deals",
   "Best deals under $300/mo",
   "Best deals under $400/mo",
-  "CR-V lease specials",
+  "Highlander lease specials",
 ];
 
 function UsageCounter({
@@ -80,21 +82,65 @@ function LimitReachedBanner() {
   );
 }
 
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+  offers?: Offer[];
+};
+
+function loadSavedMessages(): ChatMessage[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {}
+  return [];
+}
+
+function saveMessages(messages: ChatMessage[]) {
+  if (typeof window === "undefined") return;
+  try {
+    // Only persist the last 20 messages to keep storage small
+    const toSave = messages.slice(-20).map(({ role, content }) => ({ role, content }));
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(toSave));
+  } catch {}
+}
+
 function ChatContent() {
   const { user, session, loading: authLoading } = useAuth();
   const searchParams = useSearchParams();
-  const [messages, setMessages] = useState<
-    Array<{
-      role: "user" | "assistant";
-      content: string;
-      offers?: Offer[];
-    }>
-  >([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [remainingPrompts, setRemainingPrompts] = useState<number | null>(null);
   const [dailyLimit, setDailyLimit] = useState<number | null>(null);
   const [limitReached, setLimitReached] = useState(false);
   const initialQueryProcessed = useRef(false);
+  const messagesLoaded = useRef(false);
+
+  // Load saved messages on mount
+  useEffect(() => {
+    if (!messagesLoaded.current) {
+      messagesLoaded.current = true;
+      const saved = loadSavedMessages();
+      if (saved.length > 0) {
+        setMessages(saved);
+      }
+    }
+  }, []);
+
+  // Save messages whenever they change
+  useEffect(() => {
+    if (messages.length > 0) {
+      saveMessages(messages);
+    }
+  }, [messages]);
+
+  const handleNewChat = useCallback(() => {
+    setMessages([]);
+    localStorage.removeItem(CHAT_STORAGE_KEY);
+  }, []);
 
   // Fetch usage on mount
   useEffect(() => {
@@ -123,8 +169,14 @@ function ChatContent() {
     if (limitReached) return;
 
     // Add user message
-    setMessages((prev) => [...prev, { role: "user", content: query }]);
+    const updatedMessages: ChatMessage[] = [...messages, { role: "user", content: query }];
+    setMessages(updatedMessages);
     setIsLoading(true);
+
+    // Build history from previous messages (last 6, excluding current query) for backend context
+    const history = messages
+      .slice(-6)
+      .map(({ role, content }) => ({ role, content }));
 
     try {
       const headers: Record<string, string> = {
@@ -139,7 +191,7 @@ function ChatContent() {
         {
           method: "POST",
           headers,
-          body: JSON.stringify({ message: query, source: "chat" }),
+          body: JSON.stringify({ message: query, source: "chat", history }),
         }
       );
 
@@ -375,6 +427,16 @@ function ChatContent() {
       {/* Chat Messages - Show when there are messages */}
       {(messages.length > 0 || isLoading) && (
         <div className="max-w-4xl mx-auto px-3 sm:px-4 pt-4 sm:pt-8 pb-36 sm:pb-44">
+          {/* New Chat button */}
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={handleNewChat}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-400 hover:text-accent border border-border hover:border-accent/50 transition-colors"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              New Chat
+            </button>
+          </div>
           <ChatMessages messages={messages} isLoading={isLoading} />
 
           {/* Limit reached inline */}
